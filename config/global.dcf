@@ -1,5 +1,5 @@
 version: 0.9.0
-data_loading: TRUE
+data_loading: FALSE
 data_loading_header: TRUE
 data_ignore:
 cache_loading: TRUE
@@ -7,10 +7,11 @@ recursive_loading: FALSE
 munging: TRUE
 logging: FALSE
 logging_level: INFO
-load_libraries: FALSE
-libraries: reshape2, plyr, tidyverse, stringr, lubridate
+load_libraries: TRUE
+libraries: tidyverse, lubridate, data.table
 as_factors: TRUE
-tables_type: tibble
+tables_type: data.table
 attach_internal_libraries: FALSE
 cache_loaded_data:  TRUE
 sticky_variables: NONE
+
