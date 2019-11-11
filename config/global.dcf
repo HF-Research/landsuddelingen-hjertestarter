@@ -8,7 +8,7 @@ munging: TRUE
 logging: FALSE
 logging_level: INFO
 load_libraries: TRUE
-libraries: tidyverse, lubridate, data.table
+libraries: tidyverse, lubridate, data.table, rjson, jsonlite
 as_factors: TRUE
 tables_type: data.table
 attach_internal_libraries: FALSE
