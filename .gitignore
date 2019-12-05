@@ -7,5 +7,8 @@
 *.rdb
 *.csv
 *.txt
+*.png
+*.jpg
+*.pdf
 data/
 cache/
