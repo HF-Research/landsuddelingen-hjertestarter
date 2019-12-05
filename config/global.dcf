@@ -2,15 +2,15 @@ version: 0.9.0
 data_loading: FALSE
 data_loading_header: TRUE
 data_ignore:
-cache_loading: TRUE
+cache_loading: FALSE
 recursive_loading: FALSE
 munging: TRUE
 logging: FALSE
 logging_level: INFO
 load_libraries: TRUE
-libraries: tidyverse, lubridate, data.table, rjson, jsonlite
+libraries: purrr, ggplot2, lubridate, data.table, DataExplorer, mapDK, janitor, rmdformats, ggpubr, rms, riskRegression, plotly, genderizeR, RCurl
 as_factors: TRUE
-tables_type: data.table
+tables_type: data_table
 attach_internal_libraries: FALSE
 cache_loaded_data:  TRUE
 sticky_variables: NONE

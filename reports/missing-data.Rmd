@@ -1,0 +1,118 @@
+---
+title: "Missing data"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r knitr_init, echo=FALSE, cache=FALSE, include=FALSE}
+
+library(ProjectTemplate)
+library(knitr)
+## Global options
+options(max.print = "75")
+opts_chunk$set(
+  echo = FALSE,
+  cache = TRUE,
+  prompt = FALSE,
+  tidy = TRUE,
+  comment = NA,
+  message = FALSE,
+  warning = FALSE
+)
+opts_knit$set(width = 75)
+opts_knit$set(root.dir = '..')
+
+
+
+
+```
+
+```{r, echo = FALSE, include = FALSE}
+load.project()
+```
+
+
+
+
+
+
+# Missing data between datasets based on Indsamler ID
+
+
+```{r}
+# Find the missing data between datasets
+inds_not_in_log <-
+  dat$indsamlerny[!(indsamlerid %in% dat$indsamler_log$indsamlerid),]
+log_not_in_inds <-
+  dat$indsamler_log[!(indsamlerid %in% dat$indsamlerny$indsamlerid),]
+rutes_not_in_log <-
+  dat$ruter[!(indsamlerid %in% dat$indsamler_log$indsamlerid)]
+rutes_not_in_inds <-
+  dat$ruter[!(indsamlerid %in% dat$indsamlerny$indsamlerid)]
+inds_not_in_rute <-
+  dat$indsamlerny[!(indsamlerid %in% dat$ruter$indsamlerid)]
+log_not_in_rute <-
+  dat$indsamler_log[!(indsamlerid %in% dat$ruter$indsamlerid)]
+
+```
+
+
+ * There were `r nrow(inds_not_in_log)` indsamler ID that was in `indsamlerny` that was not in the `indsamler_log` dataset:
+```{r, echo = FALSE}
+knitr::kable(inds_not_in_log)
+```
+ 
+ * There were `r nrow(log_not_in_inds)` recrods in `indsamler_log`, that do not have a matching indsamler ID in `indsamlerny`
+```{r, echo = FALSE}
+knitr::kable(log_not_in_inds)
+```
+
+
+ * There were `r nrow(rutes_not_in_log)` recrods in `ruter`, that do not have a matching indsamler ID in `indsamler_log`
+```{r, echo = FALSE}
+knitr::kable(head(rutes_not_in_log[, .(ruteid, rutenr, indsamlerid)]))
+```
+
+* There were `r nrow(rutes_not_in_inds)` recrods in `ruter`, that do not have a matching indsamler ID in `indsamlerny`
+```{r, echo = FALSE}
+knitr::kable(head(rutes_not_in_inds[, .(ruteid, omraade, indsamlerid)]))
+```
+
+* There were `r nrow(inds_not_in_rute)` recrods in `indsamlerny`, that do not have a matching indsamler ID in `ruter`
+```{r, echo = FALSE}
+knitr::kable(inds_not_in_rute)
+```
+
+
+# Missing Data based on rute ID
+```{r}
+
+rutes_not_in_log <-
+  dat$ruter[!(ruteid %in% dat$indsamler_log$ruteid)]
+rutes_not_in_inds <-
+  dat$ruter[!(ruteid %in% dat$indsamlerny$ruteid)]
+inds_not_in_rute <-
+  dat$indsamlerny[!(ruteid %in% dat$ruter$ruteid)]
+log_not_in_rute <-
+  dat$indsamler_log[!(ruteid %in% dat$ruter$ruteid)]
+
+```
+
+
+ * There were `r nrow(rutes_not_in_log)` recrods in `ruter`, that do not have a matching rute ID in `indsamler_log`
+```{r, echo = FALSE}
+knitr::kable(head(rutes_not_in_log[, .(ruteid, rutenr, indsamlerid)]))
+```
+
+* There were `r nrow(rutes_not_in_inds)` recrods in `ruter`, that do not have a matching rute ID in `indsamlerny`
+```{r, echo = FALSE}
+knitr::kable(head(rutes_not_in_inds[, .(ruteid, omraade, indsamlerid)]))
+```
+
+* There were `r nrow(inds_not_in_rute)` recrods in `indsamlerny`, that do not have a matching rute ID in `ruter`
+```{r, echo = FALSE}
+knitr::kable(inds_not_in_rute)
+```

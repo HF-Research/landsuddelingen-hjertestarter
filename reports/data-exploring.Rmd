@@ -1,0 +1,155 @@
+---
+title: "Data exploring"
+author: "Matthew Phelps"
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+library(ProjectTemplate)
+library(knitr)
+library(plotly)
+opts_chunk$set(
+  echo = FALSE,
+  cache = TRUE,
+  prompt = FALSE,
+  tidy = TRUE,
+  comment = NA,
+  message = FALSE,
+  warning = FALSE
+)
+opts_knit$set(width = 75)
+opts_knit$set(root.dir = '..')
+
+```
+
+```{r, echo=FALSE, include=FALSE, cache=FALSE}
+
+load.project()
+
+
+```
+
+
+
+# Outcome Summary
+
+```{r}
+n.groups <- dat$hjertestarter[, sum(at_risk)]
+n.15 <- nrow(dat$hjertestarter[out_15ruter == 1])
+
+
+```
+
+Number of hjertestarter groups in total: `r n.groups`  
+Number of groups acheiving 15 routes: `r n.15` (`r round(n.15 / n.groups * 100, digits = 1)`%)  
+
+
+# Indsamler
+
+The number of indsamler who signed up each day:
+```{r, echo = FALSE}
+ggbarplot(dat$indsamlerny[, .N, by = indtastings_date],
+          x = "indtastings_date", y = "N",
+          fill = "darkred",
+          color = "white") +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+  xlab("Indtastings date")
+
+```
+
+
+The distribution of the mean lag time between successive indsamler signups for each group
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+gghistogram(dat$hjertestarter[!is.na(lag_mean)],
+          x = "lag_mean",
+          fill = "darkred",
+          color = "white", bins = 40) +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+  xlab("Mean time between sucessive registrations for hjertestarter groups")
+
+```
+
+
+
+The distribution of the mean number of days before d.day for indsamler signups for each group
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+gghistogram(dat$hjertestarter[!is.na(indtastings_mean)],
+          x = "indtastings_mean",
+          fill = "darkred",
+          color = "white", bins = 40) +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+  xlab("Mean indtastnings for hjertestarter groups (days before D-day)")
+ 
+# DataExplorer::plot_correlation(dat$hjertestarter[!is.na(lag_mean), .(indtastings_mean, lag_mean)])
+
+```
+
+
+
+```{r}
+n.groups <- 50
+```
+
+# Signups over time
+Examine the registration over time among the hjertestarter groups that contained the first `r n.groups` indsamler to sign up
+```{r}
+
+indsamler.tmp <- dat$indsamlerny[hjertestarterid != 0]
+setorder(indsamler.tmp, indtastningstidspunkt)
+# Earliest signups by unique group id
+tmp <- unique(indsamler.tmp, by = "hjertestarterid")[, .(hjertestarterid)]
+obs <- nrow(tmp)
+
+first.groups <- indsamler.tmp[hjertestarterid %in% tmp[1:n.groups, hjertestarterid]]
+last.groups <- indsamler.tmp[hjertestarterid %in% tmp[(obs-n.groups):obs, hjertestarterid]]
+
+p <-
+  ggplot(
+    first.groups,
+    aes(
+      x = indtastningstidspunkt,
+      y = reg_order,
+      group = hjertestarterid,
+      color = as.factor(out_15ruter)
+    )
+  ) + geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5, size = 0.3) + geom_hline(aes(yintercept = 15)) + theme_classic() +
+  scale_color_manual(name = "Legend", labels = c("<15", "15+"), values = c("darkorange", "steelblue")) +
+  ylab("Number of indsamler in group")
+ggplotly(p, tooltip = c("hjertestarterid", "reg_order"))
+```
+
+The same plot, but this time showing the registration timeline for those hjerterstarter groups who had the latest `r n.groups` indsamler to sign up
+
+```{r}
+
+p <-
+  ggplot(
+    last.groups,
+    aes(
+      x = indtastningstidspunkt,
+      y = reg_order,
+      group = hjertestarterid,
+      color = as.factor(out_15ruter)
+    )
+  ) + geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5, size = 0.3) + geom_hline(aes(yintercept = 15)) + theme_classic() +
+  scale_color_manual(name = "Legend", labels = c("<15", "15+"), values = c("darkorange", "steelblue")) +
+  ylab("Number of indsamler in group")
+ggplotly(p, tooltip = c("hjertestarterid", "reg_order"))
+
+```
+
+
+This time plot based on a continuous outcome (number of routes), instead of the binary outcome (<15 or >=15 routes)
+
+
+```{r}
+
+```
+
+

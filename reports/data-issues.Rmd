@@ -1,0 +1,131 @@
+---
+title: "Data issues"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r knitr_init, echo=FALSE, cache=FALSE, warning=FALSE, message=FALSE}
+library(ProjectTemplate)
+library(plotly)
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+opts_knit$set(root.dir = '..')
+```
+
+
+```{r, echo=TRUE, include=FALSE, cache=TRUE}
+
+load.project()
+
+
+```
+
+```{r}
+n.negative <- length(dat$hjertestarter[lag_HS_inds <0, hjertestarterid])
+n.postive <- length(dat$hjertestarter[lag_HS_inds >0, hjertestarterid])
+
+n.groups.all.negative <- sum(dat$indsamlerny[, all(lag_HS_inds <0), by = hjertestarterid][, V1], na.rm = TRUE)
+n.groups.any.negative <- n.negative - n.groups.all.negative
+```
+
+
+
+# Problem 1
+How to find the "true" time lag between the the hjertestarter (HS) group was created, and when the first indsamler signed up.  
+
+In `r n.negative` HS groups,  the first indsamler registered (`indtastningtidpunkt`) before HS group has been officially created `oprettet`. In `r n.postive` groups, the first indsamler registered after (as is expected). Below you see the distribution of time (in hours) between the creation of the HS group and the first indsamler to register for that group.
+
+```{r}
+gghistogram(dat$hjertestarter[!is.na(lag_HS_inds)],
+          x = "lag_HS_inds",
+          fill = "darkred",
+          color = "white", bins = 15) +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+  xlab("Time (minutes) between creation of hjertestarter group and first registration of indsamler")
+
+
+
+
+```
+
+
+
+
+
+### Problem 1.1:
+In **`r n.groups.all.negative`** groups, **all** indsamler sign up to a HS group before the HS group has been created. Example group below (the variable `lag_HS_inds` shows the time (in minutes) between HS group creation and indsamler registration:
+
+```{r}
+kable(head(dat$indsamlerny[hjertestarterid == 1921, .(hjertestarterid,
+                                                      indsamlerid,
+                                                      indtastningstidspunkt,
+                                                      oprettet,
+                                                      lag_HS_inds)]))
+
+
+```
+
+**Explantion:** Some HS groups were created late, and then retroactivly assigned indsamler who had signed up independently earlier.
+
+**Solution:**
+
+### Problem 1.2
+
+In **`r n.groups.any.negative`** groups **some** of the indsamler sign up to HS group before the group has been created. Example group below
+
+```{r}
+kable(head(dat$indsamlerny[hjertestarterid == 1923, .(hjertestarterid,
+                                                      indsamlerid,
+                                                      indtastningstidspunkt,
+                                                      oprettet,
+                                                      lag_HS_inds)]))
+```
+
+**Explantion:** 
+
+**Solution:**
+
+
+# Problem 2
+The `indtastningtidpunkt` variable may not be accurate. The time between successive sign-ups is often suspicious.
+
+ 
+
+
+
+```{r}
+dat$indsamlerny[hjertestarterid > 1, round(as.numeric(lag_time / 60), digits = 0), .(hjertestarterid, indsamlerid, indtastningstidspunkt)] %>% 
+  setnames(old = "V1", new = "lag (minutes)") %>% 
+  DT::datatable(rownames = FALSE)
+```
+
+**Explantion:**  This may happen when the group is organized and "signed-up" on paper beforehand, then entered into the website at once.
+
+**Solution:** (brainstorming) Exclude "suspicious" sign ups from the analysis; flag groups where this happens and apply an interaction effect (i.e. lag_mean * flag).  
+
+But, how do we separate out the "natural" enrollments from those done on paper? i.e. what is the time threshold between successive sign-ups that suggests they are all entered at once -  5 minutes? Within the same day?  
+
+Additionally, some groups may have a mix of both "natural" and paper sign ups
+
+
+# Problem 3
+We need to decide a threshold point, after which it become too late to make an intervention (e.g. 3 weeks before DDay). We will then make prediction models trained only on data up until this point. 
+
+# Problem 4
+Time dependence. The relationship between the predictor variables and the outcome is likely associated to the date.
+
+

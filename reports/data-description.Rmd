@@ -1,0 +1,21 @@
+---
+title: "Data description"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are two datasets:
+
+- `indsamlers` Each row is an "indsamler" (the one who goes around collecting money). There are four variables:
+    + `hjerterstarterid`: The organizing group ID. Those with group ID == 0 do not belong to any hjerterstarter group.
+    + `indsamlerid`: The ID unique to each person going around collecting money
+    + `ruteid`: The ID of the route. One indsamler can do >1 routes
+    + `indtastningstidspunkt`: The date-time that the indsamler was registered via HF's website  
+    
+       <br/>
+- `groups` Each row is a hjerterstarter group to which indsamlers belong. There are two variables:s
+    + `hjertestarterid`: The organizing group ID - links to the `indsamlers` dataset
+    + `antal_ruter_med_hjerteid`: The number of routes each group actually achieved on the event day
