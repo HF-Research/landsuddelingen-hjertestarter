@@ -1,4 +1,11 @@
 .Rproj.user
 .Rhistory
-.RData
-.Ruserdata
+*.RData
+*.Ruserdata
+*.rdx
+*.html
+*.rdb
+*.csv
+*.txt
+data/
+cache/
