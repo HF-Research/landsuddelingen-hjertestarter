@@ -8,7 +8,7 @@ munging: TRUE
 logging: FALSE
 logging_level: INFO
 load_libraries: TRUE
-libraries: purrr, ggplot2, lubridate, data.table, DataExplorer, mapDK, janitor, rmdformats, ggpubr, rms, riskRegression, plotly, genderizeR, RCurl
+libraries: purrr, ggplot2, lubridate, data.table, DataExplorer, mapDK, janitor, rmdformats, ggpubr, rms, riskRegression, plotly, genderizeR, RCurl, mapDK
 as_factors: TRUE
 tables_type: data_table
 attach_internal_libraries: FALSE

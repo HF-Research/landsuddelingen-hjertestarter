@@ -54,7 +54,6 @@ d$indsamlerny <-
     indsamlerid,
     hjertestarterid,
     ruteid,
-    gruppeid,
     indtastningstidspunkt,
     belindsamlet,
     beloebsendt,
@@ -72,11 +71,16 @@ d$indsamlerny <-
 # Get dates/times in correct format
 d$indsamlerny[, indtastningstidspunkt := as_datetime(indtastningstidspunkt)]
 d$indsamlerny[, indtastings_date := lubridate::date(indtastningstidspunkt)]
+d$indsamlerny[, indtastnings_days_before := as.numeric(indtastings_date - gl$d.day)]
+
 d$hjertestarter[, oprettet := lubridate::dmy_hms(oprettet)]
 d$hjertestarter[, oprettet_date := lubridate::date(oprettet)]
 d$hjertestarter[, oprettet_before_dday := as.numeric(oprettet_date - gl$d.day)]
 d$indsamler_log[, date_time := as_datetime(dato)]
 d$indsamler_log[, date := lubridate::date(date_time)]
+
+d$ruter[, optagetden := lubridate::ymd_hms(optagetden)]
+
 
 # Trim extra spaces before or after character strings
 d$indsamlerny[,  fornavn := tolower(fornavn)]
@@ -98,6 +102,10 @@ d$hjertestarter <- d$hjertestarter[!grep("^test", gruppenavn)]
 # Convert numbers to numeric
 d$hjertestarter[, belob_indsamlet := as.numeric(sub(",", ".", belob_indsamlet))]
 
+# Part of HS group or not
+d$indsamlerny[, hs_group := 0]
+d$indsamlerny[hjertestarterid != 0, hs_group := 1]
+
 # Order dataset
 setorder(d$indsamlerny, hjertestarterid, indtastningstidspunkt)
 
@@ -108,6 +116,13 @@ d$hjertestarter[antal_ruter_med_hjerteid >= 15, out_15ruter := 1L]
 
 d$hjertestarter[, out_10_14 := 0L]
 d$hjertestarter[between(antal_ruter_med_hjerteid, 10, 14), out_10_14 := 1L]
+
+
+
+d$indsamlerny[, no_show := 0]
+d$indsamlerny[beloebsendt == 0, no_show := 1]
+d$indsamlerny[, age := year(gl$d.day) - foedselsdato]
+
 
 # SELECT REAL HJERTESTARTER GROUPS ----------------------------------------
 
@@ -143,27 +158,10 @@ unique(x[order(diff)], by = "indsamlerid")[order(diff)]
 x[indsamlerid == 25638]
 
 
+z <- merge(d$ruter[, .(ruteid, indsamlerid, optagetden)], d$indsamler_log[typen == "taget"], by = c("ruteid", "indsamlerid"))
+z[, diff:= optagetden - date_time]
+get_dupes(z, ruteid)
+get_dupes(d$indsamler_log[typen == "taget"], indsamlerid, ruteid)
 
-
-
-
-
-
-
-
-# SUBSET ------------------------------------------------------------------
-
-# Subset to only those entries occuring 3 weeks before d.day
-d$indsamler_sub <- d$indsamlerny[indtastningstidspunkt < gl$cut.day]
-d$hs_sub <- d$hjertestarter[oprettet_date < gl$cut.day & at_risk == 1]
-
-
-# DATA FOR EXPORT ---------------------------------------------------------
-keep_vars <- c("hjertestarterid","indsamlerid","ruteid","indtastningstidspunkt")
-export_ls <- list()
-export_ls$indsamlers <- d$indsamlerny[, ..keep_vars]
-
-keep_vars <- c("hjertestarterid","antal_ruter_med_hjerteid")
-export_ls$groups <- d$hjertestarter[, ..keep_vars]
-
-saveRDS(export_ls, file = "data/landsindsamling_anonymous.rds")
+# Indsamler with multiple routes in multiple cities_
+get_dupes(d$ruter[indsamlerid !=0, .N, by = .(byen, indsamlerid)], indsamlerid)

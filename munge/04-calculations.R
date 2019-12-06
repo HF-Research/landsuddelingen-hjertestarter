@@ -31,7 +31,7 @@ d$indsamlerny[, lag_HS_inds := as.numeric(indtastningstidspunkt - oprettet) / 60
 
 # Variable describing the number of days before d.day that each indsamler signed
 # up. The higher the number, the earlier they signed up
-d$indsamlerny[, indtastnings_days_before := as.numeric(indtastings_date - gl$d.day)]
+
 d$indsamlerny[, indtastings_mean := mean(indtastnings_days_before), by = "hjertestarterid"]
 
 

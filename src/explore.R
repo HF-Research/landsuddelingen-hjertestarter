@@ -4,9 +4,32 @@ load.project()
 
 
 
-
+# Add number of routes each indsamler is registered for
 d$indsamler_sub
 d$hs_sub
+missing_rutes_sub <- merge(d$indsamler_sub,
+      d$routes_sub,
+      by = "indsamlerid",
+      all.x = TRUE)[is.na(ruteid.y), .(indsamlerid, ruteid.x)]
+
+d$ruter[indsamlerid  %in% missing_rutes_sub$indsamlerid]
+d$ruter[ruteid  %in% missing_rutes_sub$ruteid.x]
+d$indsamler_sub[indsamlerid.x != indsamlerid.y]
+
+# PREDICT NO-SHOWS --------------------------------------------------------
+
+forms <- list()
+forms$a <- no_show ~ hs_group + (age) + (indtastnings_days_before)
+
+
+z <- lrm(forms$a, data = d$indsamler_sub)
+exp(coef(lrm(forms$a, data = d$indsamler_sub)))
+
+
+# Predict number of routes completed --------------------------------------
+
+
+
 
 
 
