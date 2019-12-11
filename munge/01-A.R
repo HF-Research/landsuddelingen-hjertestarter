@@ -141,6 +141,11 @@ d$indsamler_log <- merge(d$indsamler_log, d$indsamlerny[, .(indsamlerid, hjertes
 
 
 # INVESTIGATE HOW ROUTES ARE COUNTED  -------------------------------------
+
+# How to calculate who showed up or not
+x <- merge(d$ruter[hjerteid1 != "" | hjerteid2 !="" & optaget == 1], d$indsamlerny[hjertestarterid >1], by = "indsamlerid")
+x[no_show==0]
+
 x <- unique(d$indsamler_log[typen == "taget"], by = "ruteid")[, .N, by = hjertestarterid]
 z1 <- unique(d$indsamlerny, by = "ruteid")[, .N, by = hjertestarterid]
 setnames(z1, "N", "routes_inds")
