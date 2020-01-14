@@ -1,5 +1,5 @@
 ---
-title: "Analyseenheden Final report to Landsuddeling"
+title: "Analyseenheden final report for Landsuddeling 2019"
 author: "Matthew Phelps"
 date: "15 February 2020"
 output: 
@@ -34,7 +34,7 @@ opts_knit$set(root.dir = '..')
 Landsuddelingen would like to predict which Hjertestarter groups they should target with additional support to increase the odds they reach a minimum of 15 collectors (indsamler).
 
 ### Results
-The data quality was too low to allow us to contrstuct a model to predict which hjerterstarter groups should recieve assistance. A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggets that the gender of the collector is not important
+The data quality was too low to allow us to construct a model to predict which hjerterstarter groups should receive assistance. A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that the gender of the collector is not important
 
 ### Recommendation
 Instead of trying to predict which groups receive assistance, we instead recommend using 2020 to test whether the planned intervention actually improves the likelihood that a Hjertestarter group succeeds in reaching a minimum of 15 collectors. Specifically, we recommend that 3 - 4 weeks before the landsuddelingen date, Landsuddelingen randomly split the Hjertestarter groups into two groups. The first group will receive no additional assistance (called the "control group"), while the second group will receive the intervention (called the "intervention group"). Then, following completion of the 2020 landsuddeling, we can investigate to see if the intervention increased the number of collectors.
@@ -42,11 +42,21 @@ Instead of trying to predict which groups receive assistance, we instead recomme
 
 
 
-# Report
+# Full Report
 
 ### Background
 
-In the 2019 landsuddeling, hjerterstarter groups who were able to get 15 or more routes completed received a free Hjertestarter. The department noted that many groups nearly reached this goal, but ended up falling short (e.g. achieving between 10 - 14 routes); we shall call these groups "near misses". In order to improve these outcomes for the following year (2020), they wished to provide some assistance to these near-miss groups. Thus, the landsuddeling group needs to know in advance, which groups are at risk of being near-misses.
+In the 2019 landsuddeling (LU), hjerterstarter groups who were able to get 15 or more routes completed received a free Hjertestarter. The LU organizers noted that many groups nearly reached this goal, but ended up falling short (e.g. achieving between 10 - 14 routes); we shall call these groups "near misses". In order to improve these outcomes for the following year (2020), the LU organizers  wish to provide some assistance to these near-miss groups. However, this requires that the organizers know in advance, which groups are at risk of being near-misses.
+
+In order to build a prediction model for near-misses, the LU delievered the datasets for LU 2019 to anlayseenheden
+
+
+### Data
+
+The data provided to the analyseenheden included data on many potential "risk-factors" 
+
+- 
+
 
 
 ```{r cars}

@@ -19,11 +19,19 @@ d$indsamler_sub[indsamlerid.x != indsamlerid.y]
 # PREDICT NO-SHOWS --------------------------------------------------------
 
 forms <- list()
-forms$a <- no_show ~ hs_group + (age) + (indtastnings_days_before)
 
-
-z <- lrm(forms$a, data = d$indsamler_sub)
-exp(coef(lrm(forms$a, data = d$indsamler_sub)))
+forms$a <- no_show ~ hs_group + (age) + gender
+forms$b <- no_show ~ hs_group + rcs(age) + gender
+forms$c <- no_show ~ hs_group + gender
+forms$d <- no_show ~ gender
+forms$e <- no_show ~ hs_group
+d$indsamler_sub
+lrm(forms$a, data = d$indsamler_sub)
+lrm(forms$b, data = d$indsamler_sub)
+lrm(forms$c, data = d$indsamler_sub)
+lrm(forms$d, data = d$indsamler_sub)
+lrm(forms$e, data = d$indsamler_sub)
+exp(coef(lrm(forms$e, data = d$indsamler_sub)))
 
 
 # Predict number of routes completed --------------------------------------
