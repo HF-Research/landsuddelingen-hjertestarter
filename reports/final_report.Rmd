@@ -31,14 +31,16 @@ opts_knit$set(root.dir = '..')
 # Executive summary
 
 ### Problem statement
-Landsuddelingen would like to predict which Hjertestarter groups they should target with additional support to increase the odds they reach a minimum of 15 collectors (indsamler).
+Landsuddelingen would like to predict which Hjertestarter groups they should target with additional support in order to increase the odds they reach a minimum of 15 collectors (indsamler).
 
 ### Results
-The data quality was too low to allow us to construct a model to predict which hjerterstarter groups should receive assistance. A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that the gender of the collector is not important
+The data quality was too low to allow us to construct a model to predict which hjerterstarter groups should receive assistance. A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that the gender of the collector is not important.
 
 ### Recommendation
-Instead of trying to predict which groups receive assistance, we instead recommend using 2020 to test whether the planned intervention actually improves the likelihood that a Hjertestarter group succeeds in reaching a minimum of 15 collectors. Specifically, we recommend that 3 - 4 weeks before the landsuddelingen date, Landsuddelingen randomly split the Hjertestarter groups into two groups. The first group will receive no additional assistance (called the "control group"), while the second group will receive the intervention (called the "intervention group"). Then, following completion of the 2020 landsuddeling, we can investigate to see if the intervention increased the number of collectors.
 
+Instead of trying to predict which groups receive assistance, we instead recommend using 2020 to test whether the planned intervention actually improves the likelihood that a Hjertestarter group succeeds in reaching a minimum of 15 collectors. Specifically, we recommend that 3 - 4 weeks before the landsuddelingen date, Landsuddelingen randomly split the extant Hjertestarter groups into two groups. The first group will receive no additional assistance (called the "control group"), while the second group will receive the intervention (called the "intervention group"). Then, following completion of the 2020 landsuddeling, test  if those in the intervention group had significantly more collectors than those in the control group.
+
+The fact that the data was of insufficient quality is not a statement of criticism; the data-infrastructure for LU is designed to facilitate an efficient implementation of the activity, and not designed for data-collection for research purposes.
 
 
 
@@ -48,14 +50,31 @@ Instead of trying to predict which groups receive assistance, we instead recomme
 
 In the 2019 landsuddeling (LU), hjerterstarter groups who were able to get 15 or more routes completed received a free Hjertestarter. The LU organizers noted that many groups nearly reached this goal, but ended up falling short (e.g. achieving between 10 - 14 routes); we shall call these groups "near misses". In order to improve these outcomes for the following year (2020), the LU organizers  wish to provide some assistance to these near-miss groups. However, this requires that the organizers know in advance, which groups are at risk of being near-misses.
 
-In order to build a prediction model for near-misses, the LU delievered the datasets for LU 2019 to anlayseenheden
+The hypothesis was that groups that signed up more collectors over a short time span were more likely to succeed in reaching 15 collectors, and conversly, those groups that were slow to sign up collectors were at risk for being near-misses. For example, a group that signed up the first 5 collectors in 2 weeks might be more likely to succeed than a group that takes 4 weeks to reach the same number. Other potential predictor variables could include the presence/absence of a group coordinator and date of the groups creation.
+
+
+
+could include gender, age, previous LU experience, have or know someone with a CVD
+
+In order to build a prediction model for near-misses, the LU delivered the datasets for LU 2019 to anlayseenheden
 
 
 ### Data
 
-The data provided to the analyseenheden included data on many potential "risk-factors" 
+The data provided to the analyseenheden was downloaded from the third-party providers of the web-based sign-up system. The data consisted of six excel files containing data on:
 
 - 
+
+### Process
+
+The data were first cleaned and checked for errors/inconsistencies in an iterative fashion. Problems with the data, and their solutions when possible, were discussed with LU. As the scope and nature of the data problems became apparent, it became clear that addressing the original problem would not be possible, and the scope of the analysis was broadened to explore any insights could be derived from the LU2019 dataset. This exploratory analysis indicated that the only outcome that could be investigated was risk factors for an individual collector to not show up. Several statistical models were built to investigate this outcome, 
+
+
+### Data problems
+
+This sections explains why the original analysis was impossible to do.
+
+
 
 
 
