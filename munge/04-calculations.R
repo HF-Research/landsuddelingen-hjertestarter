@@ -12,6 +12,7 @@ d$indsamlerny[, reg_order := 1] %>%
 d$indsamler_sub[, reg_order := 1] %>%
   .[, reg_order := cumsum(reg_order), by = hjertestarterid]
 # Time between successive enrollments, and avg time. 
+setorder(d$indsamlerny, hjertestarterid, indtastningstidspunkt)
 d$indsamlerny[, lag_time := indtastningstidspunkt - shift(indtastningstidspunkt), by = hjertestarterid] %>%
   .[, lag_mean := mean(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid] %>%
   .[, lag_median := median(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid]
