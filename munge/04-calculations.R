@@ -14,11 +14,18 @@ d$indsamler_sub[, reg_order := 1] %>%
 # Time between successive enrollments, and avg time. 
 setorder(d$indsamlerny, hjertestarterid, indtastningstidspunkt)
 d$indsamlerny[, lag_time := indtastningstidspunkt - shift(indtastningstidspunkt), by = hjertestarterid] %>%
+  .[, lag_time_min := as.numeric(lag_time / 60)] %>% 
   .[, lag_mean := mean(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid] %>%
   .[, lag_median := median(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid]
 
 
+# SUBSET INDSAMLER TO THOSE W. >10 MIN LAG TIME ---------------------------
+
+
 d$indsamler_sub[, lag_time := indtastningstidspunkt - shift(indtastningstidspunkt), by = hjertestarterid] %>%
+  .[, lag_time_min := as.numeric(lag_time / 60)]
+# d$indsamler_sub <- d$indsamler_sub[lag_time_min > 10]
+d$indsamler_sub %>% 
   .[, lag_mean := mean(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid] %>%
   .[, lag_median := median(as.numeric(lag_time), na.rm = TRUE) / 3600, by = hjertestarterid]
 

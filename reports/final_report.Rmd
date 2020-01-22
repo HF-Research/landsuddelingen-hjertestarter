@@ -2,9 +2,10 @@
 title: "Analyseenheden final report for Landsuddeling 2019"
 author: "Matthew Phelps"
 date: "15 February 2020"
-output: 
+output:
   html_document:
     theme: flatly
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,7 +17,7 @@ library(rmdformats)
 ## Global options
 options(max.print="75")
 opts_chunk$set(echo=FALSE,
-	             cache=TRUE,
+	             cache=FALSE,
                prompt=FALSE,
                tidy=TRUE,
                comment=NA,
@@ -28,6 +29,22 @@ opts_knit$set(root.dir = '..')
 
 ```
 
+
+```{r}
+load.project()
+source("src/analysis-noshows.R")
+collectors <- d$indsamlerny[, .(hjertestarterid, name_gender, indsamlerid, indtastningstidspunkt, indtastings_date, indtastnings_days_before, lag_time, lag_HS_inds, hs_group, no_show, age, gender)]
+
+hs <- d$hjertestarter[, .(hjertestarterid, antal_koordinatorer, aktiv, oprettet_date, oprettet, lag_HS_inds, antal_ruter_med_hjerteid, out_15ruter)]
+
+n.hs <- NROW(unique(hs, by = "hjertestarterid"))
+n.hs.active <- nrow(hs[aktiv == "Ja"])
+n.hs.routes1 <- hs[antal_ruter_med_hjerteid>0]
+
+fill_col <- "red"
+
+```
+
 # Executive summary
 
 ### Problem statement
@@ -36,7 +53,13 @@ Landsuddelingen would like to predict which Hjertestarter groups they should tar
 ### Results
 The data quality was too low to allow us to construct a model to predict which hjerterstarter groups should receive assistance.  
 
-A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that the gender of the collector is not important.
+A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that:
+
+- Those connected to a hjertestarter group were much **more likely** to show up (OR: `r res.no.shows[2, 1]`), as compare to those not connected to a group.
+
+- Older age was associated with **higher odds** of showing-up.
+
+- Gender had **no effect** on the probability a collector would show up
 
 ### Recommendation
 
@@ -66,24 +89,105 @@ The data provided to the analyseenheden was downloaded from the third-party prov
 The data were first cleaned and checked for errors/inconsistencies in an iterative fashion. Problems with the data, and their solutions when possible, were discussed with LU. As the scope and nature of the data problems became apparent, it became clear that addressing the original problem would not be possible, and the scope of the analysis was broadened to explore any insights could be derived from the LU2019 dataset. This exploratory analysis indicated that the only outcome that could be investigated was risk factors for an individual collector to not show up. Several statistical models were built to investigate this outcome, 
 
 
+### Descriptive statistics
+
+
+- Total active hjertestarter groups: `r n.hs.active`
+
+- Total hjertestartergroups achieving at least one route: `r nrow(n.hs.routes1)` (`r round(nrow(n.hs.routes1) / n.hs.active * 100, digits = 1)`% of the total active groups)
+
+- Total number of collectors who signed up: `r nrow(collectors)`
+
+- Number of collectors who showed up: `r nrow(collectors[no_show == 0])` (`r round(nrow(collectors[no_show == 0]) / nrow(collectors)*100, digits = 1)`% of total)
+
+- Number of collectors attached to a hjertestarter group: `r nrow(collectors[hjertestarterid >1])` (`r round(nrow(collectors[hjertestarterid >1]) / nrow(collectors) * 100, digits = 1)`% of total)
+
+- Average age of the collectors: `r collectors[, round(mean(age, na.rm= TRUE), digits = 1)]`
+```{r}
+gghistogram(collectors, x = "age", fill = fill_col, facet.by = "gender")
+
+```
+
+
+
 ### Data problems
+```{r, include=FALSE}
+collectors[, lag_time_min := as.numeric(lag_time / 60)]
+plot_lagtime_10 <- gghistogram(collectors[!is.na(lag_time_min) &
+                                               hjertestarterid > 1 &
+                                               lag_time_min < 10 , .(lag_time_min)], x = "lag_time_min",
+                               fill = fill_col) + labs(x = "Lag time (minutes)", y = "Count")
+plot_lagtime_10plus <-
+  gghistogram(collectors[!is.na(lag_time_min) &
+                              hjertestarterid > 1 &
+                              lag_time_min > 10 &
+                              lag_time_min < 1e5 , .(lag_time_min)], x = "lag_time_min",
+              fill = fill_col) + labs(x = "Lag time (minutes)", y = "Count")
 
-This sections explains why the original analysis was impossible to do.
+plot_lag_time <-
+  ggarrange(
+    plot_lagtime_10,
+    plot_lagtime_10plus,
+    ncol = 1,
+    nrow = 2,
+    labels = c("Under 10 min", "Over 10 min")
+  )
 
-The main variable of interest (time between successive sign-ups within a Hjertestarter group) was of poor quality. Many groups organized themseves and signed-up collectors offline before entering all the information into the online platform at once
+
+below_10min <-
+ collectors[hjertestarterid > 1 &
+                  lag_time_min < 10, .(hjertestarterid, indtastningstidspunkt , lag_time_min)]
+
+n_below_10 <- NROW(below_10min)
+n_collectors <- NROW(collectors[hjertestarterid>1])
+```
+
+This sections explains why the original analysis was infeasible to do
+
+#### 1. Lag-time  
+
+The main variable of interest, lag-time (time between successive sign-ups within a Hjertestarter group), was of poor quality. Many groups likely organized themseves and signed-up collectors offline before entering all the information into the online platform at once. To illustrate this, we can compare the distribution of all signups under 10 minutes to the distribution of all signups over 10 minutes (below). The distribution of signups over 10 minutes follows the expected exponential distribution, while those under 10 minutes apperas to be more normally distributed around the mean. This suggests a different data-generating process for those signups under 10 minutes (i.e.the offline "pre" organization of the hjertestarter group)
 
 ```{r}
-gghistogram(d$indsamlerny[!is.na(lag_time) &
-                            hjertestarterid > 1, .(as.numeric(lag_time / 3600))], x = "V1",
-            bins = 2000) + coord_cartesian(xlim = c(0, 50))
-```
- 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+plot_lag_time
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+There were `r n_below_10` signups out of `r n_collectors` (`r round(n_below_10 / n_collectors * 100, digits = 1)`%) that had a lag-time of < 10 minutes.
+
+
+```{r}
+n.neg <- NROW(hs[lag_HS_inds < 0])
+n.all <- NROW(unique(hs, by = "hjertestarterid"))
+n.active <- NROW(hs[!is.na(lag_HS_inds)])
+```
+
+
+#### 2. Hjertestarter group creation time
+Another covariate, the lag time between the creation of the hjertestarter group and the first collector to sign up for the group, contained invalid data in the form of negative values. A total of `r n.neg` groups (`r round(n.neg/n.active*100, digits = 1)`%) contained a negative lag time. This likely occured because some Hjertestarter groups were retroactively assigned collectors that had signed up earlier.
+
+
+### Predicting no-shows
+
+We investigate the risk-factors for a collector not showing-up on the collection day. The potential risk-factors examined included:
+
+
+- gender (binary)
+- age (continuous)
+- member/non-member of hjertestarter group (binary)
+
+
+The data included all collectors who signed up before `r format(gl$cut.day, "%d. %b")` (n = `r NROW(d$indsamler_sub)`). We investigated `r length(forms)` logistic models:
+
+- model 1: no_show ~ hs_group + age + gender
+
+- model 2: no_show ~ hs_group + rcs(age) + gender
+
+- model 3: no_show ~ hs_group + age
+
+- model 4: no_show ~ hs_group
+
+Model 3 provided the best trade-off of complexity and performance, therefore our inferences are drawn from his model.
+
+This models shows that those collectors who are not connected to a hjertestarter group have `r res.no.shows[2, 1]` (95% CI: `r res.no.shows[2,2]` - `r res.no.shows[2,3]`) greater odds of not showing up as compared to collectors who are connected to a hjertestarter group. Increasing age was also associated with higher odds of showing up, with each year of age inceasing the odds by `r res.no.shows[4,1]` (95% CI: `r res.no.shows[4,2]` - `r res.no.shows[4,3]`).
+

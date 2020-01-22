@@ -1,6 +1,6 @@
 ## SUBSET ------------------------------------------------------------------
 
-# Subset to only those entries occuring 3 weeks before d.day
+# Subset to only those entries occuring 3 weeks before d.day and having a lag_time of > 10 minutes
 d$indsamler_sub <- d$indsamlerny[indtastningstidspunkt < gl$cut.day]
 d$hs_sub <- d$hjertestarter[oprettet_date < gl$cut.day & at_risk == 1]
 d$routes_sub <- d$ruter[optagetden< gl$cut.day & optaget == 1]
