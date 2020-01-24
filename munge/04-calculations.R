@@ -44,15 +44,27 @@ d$indsamlerny[, indtastings_mean := mean(indtastnings_days_before), by = "hjerte
 
 
 
+# TIME TO FIRST 5 COLLECTORS ----------------------------------------------
+hs_cut <- d$hjertestarter[oprettet_date < gl$cut.day]
+inds_cut <- d$indsamlerny[indtastningstidspunkt < gl$cut.day, .(hjertestarterid, gender, indtastningstidspunkt, age)]
+setorder(inds_cut, hjertestarterid, indtastningstidspunkt)
+inds_cut[, seq := seq.int(.N), by = hjertestarterid]
+inds_cut[, lag_5 := indtastningstidspunkt - shift(indtastningstidspunkt, n = 4L), by = hjertestarterid]
+inds_cut[, lag_5_in_days := as.numeric(lag_5) / 86400]
+# Merge only those with seq number 5
+inx <- inds_cut[, seq == 5]
 
-d$hjertestarter
 
 
-d$indsamlerny
+
+
 
 # JOIN CALCULATED DATA TO GROUP-LEVEL DATASET ----------------------------------------
 var_to_join <- c("lag_mean","lag_median", "lag_HS_inds","indtastings_mean", "hjertestarterid")
 tmp <- unique(d$indsamlerny[, ..var_to_join], by = "hjertestarterid")
+d$hjertestarter <- merge(d$hjertestarter, tmp, by = "hjertestarterid", all.x = TRUE)
+
+tmp <- inds_cut[inx, .(hjertestarterid, lag_5_in_days)]
 d$hjertestarter <- merge(d$hjertestarter, tmp, by = "hjertestarterid", all.x = TRUE)
 
 

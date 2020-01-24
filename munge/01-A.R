@@ -75,7 +75,7 @@ d$indsamlerny[, indtastnings_days_before := as.numeric(indtastings_date - gl$d.d
 
 d$hjertestarter[, oprettet := lubridate::dmy_hms(oprettet)]
 d$hjertestarter[, oprettet_date := lubridate::date(oprettet)]
-d$hjertestarter[, oprettet_before_dday := as.numeric(oprettet_date - gl$d.day)]
+d$hjertestarter[, oprettet_before_dday := as.numeric(gl$d.day - oprettet_date)]
 d$indsamler_log[, date_time := as_datetime(dato)]
 d$indsamler_log[, date := lubridate::date(date_time)]
 

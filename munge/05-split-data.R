@@ -1,4 +1,4 @@
-tmp <- d$hjertestarter[!is.na(lag_mean)]
+tmp <- d$hjertestarter[!is.na(lag_mean) & lag_HS_inds > 0 & oprettet_date < gl$cut.day]
 
 n <- nrow(tmp)
 set.seed(1)
