@@ -98,7 +98,9 @@ A sub-analysis investigating factors associated with no-shows (people who sign u
 
 ### Recommendation
 
-Instead of trying to predict which groups receive assistance, we instead recommend using 2020 to test whether the planned intervention actually improves the likelihood that a Hjertestarter group succeeds in reaching a minimum of 15 routes. Specifically, we recommend that 3 - 4 weeks before the landsuddelingen date, Landsuddelingen randomly split the extant Hjertestarter groups into two groups. The first group will receive no additional assistance (called the "control group"), while the second group will receive the intervention (called the "intervention group"). Then, following completion of the 2020 landsuddeling, test  if those in the intervention group had significantly more routes than those in the control group.
+Instead of trying to predict which groups receive assistance, we instead recommend using 2020 focus on reducing the number of no-shows among collectors. This may potentially be achieved by implementing an intervention that increases the percentage of collectors who are attached to a hjertestarter group. Additionally, it would be possible to test whether this intervention was effective by only applying it to a subset of the collectors
+
+If there is a strong interest in improving the number of hjertestarter groups that achieve the minimum of 15 routes, we suggest using 2020 to test whether the planned intervention improves the probability of groups meeting this goal. However, if this intervention is done simultaneously with the intervention targeting collectors described above, careful consideration would be needed to ensure the data are not corrupted.
 \newline
 \newline
 \newline
@@ -343,7 +345,23 @@ This models shows that those collectors who are not connected to a hjertestarter
 
 ## Recommendations
 
-For the 2020 LU, we recommend testing to see if the planned intervention is effective at improving the likelihood that a group will achieve 15 routes (or if the intervention increases the number of routes a group achieves on average). This can be done in the following steps in 2020:
+For the 2020 LU, we recommend aiming to reduce the number of no-shows. This could potentially be done with an intervention that increases the probability that a collector will join a hjertestarter group. the intervention could be applied on a rolling-basis to each newly recruited collector, or it could be applied at-once to all collectors that are registered (but not part of a hjertestarter group) on a specific date.The nature of this implementation is, however, beyond the scope of this analysis.
+
+Additionally, it may be helpful to collect additional variables from the collectors that may help explain no-shows ahead of time. These could include:
+
+- Previous experience as a collector (yes/no)
+
+- Whether they are personally affected by hjerte-kar sygdomme, e.g. if they, or a family or friend has a CVD (note - this may have GDPR implications since it is probably personfølsomme oplysninger).
+
+- Gender is not recommend to be included. This can be inferred from names, and furthermore, it seems to be unrelated to the probability of no-shows.
+
+These data would only be worthwhile to collect if there is a reasonable probability that a high percentage of people will provide the data. Otherwise the data will end up too biased to be useful.
+
+
+Additionally, it would be relatively easy to assess the effectiveness of any intervention. If the intervention is applied to a randomly-selected sub-set of the collectors, then one can test if the intervention was associated with the no-show rate. This test can be done through a logistic regression fit to the dataset of collectors. The outcome variable would be the show/no-show status, and the explainitory variables would be the intervention group each collector belonged to.
+
+
+testing to see if the planned intervention is effective at improving the likelihood that a group will achieve 15 routes (or if the intervention increases the number of routes a group achieves on average). This can be done in the following steps in 2020:
 
 1. Select a date when the intervention should start (e.g. 3 weeks before collection day).
 
@@ -356,12 +374,3 @@ For the 2020 LU, we recommend testing to see if the planned intervention is effe
     + Build a logistic model, where the outcome is the binary variable of whether the hjertestarter group achieved 15 routes (yes/no), and the explanitory variable is which intervention group the hjerterstarter group belonged to (intervention or control)
     + Build a linear model where the outcome is the continuous variable of how many routes each hjertestarter group achieved, and the explanitory variable is which intervention group the hjerterstarter group belonged to (intervention or control)
     
-Additionally, it may be helpful to collect additional variables from the collectors that may help predict no-shows ahead of time. These could include:
-
-- Previous experience as a collector (yes/no)
-
-- Whether they are personally affected by hjerte-kar sygdomme, e.g. if they, or a family or friend has a CVD (note - this may have GDPR implications since it is probably personfølsomme oplysninger).
-
-- Gender is not recommend to be included. This can be inferred from names, and furthermore, it seems to be unrelated to the probability of no-shows.
-
-These data would only be worthwhile to collect if there is a reasonable probability that a high percentage of people will provide the data. Otherwise the data will end up too biased to be useful.
