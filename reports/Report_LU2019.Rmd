@@ -7,6 +7,7 @@ output:
     toc: true
     toc_depth: 2
     number_sections: true
+    fig_caption: yes
   word_document:
     reference_docx: report_template1.docx
     toc: true
@@ -20,6 +21,8 @@ library(ProjectTemplate)
 library(plotly)
 library(knitr)
 library(rmdformats)
+library(data.table)
+library(ggpubr)
 
 ## Global options
 options(max.print="75")
@@ -37,12 +40,15 @@ opts_knit$set(root.dir = '..')
 ```
 
 
-```{r}
+```{r, cache=TRUE}
 load.project()
 source("src/analysis-noshows.R")
+```
+
+```{r}
 collectors <- d$indsamlerny[, .(hjertestarterid, name_gender, indsamlerid, indtastningstidspunkt, indtastings_date, indtastnings_days_before, lag_time, lag_HS_inds, hs_group, no_show, age, gender)]
 collectors[is.na(gender), gender := "unknown"]
-
+collectors[, lag_time_min := as.numeric(lag_time / 60)]
 hs <-
   d$hjertestarter[, .(
     hjertestarterid,
@@ -65,8 +71,8 @@ n.hs.routes1 <- hs[antal_ruter_med_hjerteid > 0]
 
 per.near.misses <- round(n.near.misses / n.hs.active * 100, digits = 1)
 
-fill_col <- "red"
-plot_font_size <- 10
+fill_col <- "#FF6F6F"
+plot_font_size <- 9
 line_size <- 0.2
 alpha_val <- 0.3
 point_size <- 1.5
@@ -77,16 +83,17 @@ point_size <- 1.5
 # Executive summary
 
 ### Problem statement
-Landsuddelingen would like to predict which Hjertestarter groups they should target with additional support in order to increase the probability the groups reach the minimum of 15 routes required for a group to receive a free hjertestarter.
+Landsuddelingen (LU) would like to predict which Hjertestarter groups they should target with additional support in order to increase the probability the groups reach the minimum of 15 routes required for a group to receive a free hjertestarter.
 
 ### Results
-The original question could not be answered due to two reasons:
+The original question could not be answered due to three reasons:
 
 - The complexity of the relationship between the outcome and the covariates
 
 - Insufficient data quality for key covariates. [^1]
 
-- The rarity of groups that were "near-misses" (groups with 10 - 14 routes).
+- LU is already highly effective at getting groups to the goal of 15 routes, only `r per.near.misses`% of groups were "near-misses" (achieving between 10 - 14 routes).
+
 
 A sub-analysis investigating factors associated with no-shows (people who sign up, but fail to show up on the date) suggests that:
 
@@ -98,7 +105,7 @@ A sub-analysis investigating factors associated with no-shows (people who sign u
 
 ### Recommendation
 
-Instead of trying to predict which groups receive assistance, we instead recommend using 2020 focus on reducing the number of no-shows among collectors. This may potentially be achieved by implementing an intervention that increases the percentage of collectors who are attached to a hjertestarter group. Additionally, it would be possible to test whether this intervention was effective by only applying it to a subset of the collectors
+Instead of trying to predict which groups receive assistance, we instead recommend using 2020 focus on reducing the number of no-shows among collectors. This may potentially be achieved by implementing an intervention that increases the percentage of collectors who are attached to a hjertestarter group. Additionally, it would be possible to test whether this intervention was effective by only applying it to a subset of the collectors and assessing the difference in no-shows between the group receiving the intervention and the group not receiving it.
 
 If there is a strong interest in improving the number of hjertestarter groups that achieve the minimum of 15 routes, we suggest using 2020 to test whether the planned intervention improves the probability of groups meeting this goal. However, if this intervention is done simultaneously with the intervention targeting collectors described above, careful consideration would be needed to ensure the data are not corrupted.
 \newline
@@ -122,9 +129,9 @@ If there is a strong interest in improving the number of hjertestarter groups th
 
 ## Background
 
-In the 2019 landsuddeling (LU), hjerterstarter groups who were able to get 15 or more routes completed received a free Hjertestarter. The LU organizers noted that some groups nearly reached this goal, but ended up falling short (e.g. achieving between 10 - 14 routes); we call these groups "near misses". In order to improve these outcomes for subsequent years, the LU organizers  wish to provide some assistance to these near-miss groups. However, this requires that the organizers know in advance, which groups are at risk of being near-misses.
+In the 2019 landsuddeling (LU), hjerterstarter groups who were able to complete 15 or more routes received a free Hjertestarter. The LU organizers noted that some groups nearly reached this goal, but ended up falling short (e.g. achieving between 10 - 14 routes); we call these groups "near misses". In order to reduce the number of near misses, the LU organizers wish to provide some assistance to these groups. However, this requires that the organizers know in advance, which groups are at risk of being near-misses.
 
-LU hypothesized that groups that signed up more collectors (indsamler) over a short time-span were more likely to succeed in reaching 15 routes, and conversely, those groups that were slow to sign up collectors were at risk for being near-misses. For example, a group that signed up the first 5 collectors in 2 weeks might be more likely to succeed than a group that takes 4 weeks to reach the same number. Other potential predictor variables could include the presence/absence of a group coordinator, date of the groups' creation, and the time lag between the groups creation and the first collector to sign-up.
+LU hypothesized that groups that signed up more collectors (indsamler) over a short time-span were more likely to succeed in reaching 15 routes, and conversely, those groups that were slow to sign up collectors were at risk for being near-misses. For example, a group that signed up the first 5 collectors in 2 weeks might be more likely to succeed than a group that takes 4 weeks to reach the same number. Other potential predictor variables (that we have data for) could include the presence/absence of a group coordinator, date of the groups' creation, and the time lag between the groups creation and the first collector to sign-up.
 
 
 ## Process
@@ -140,14 +147,45 @@ We start with some summary statistics of the attributes of the hjertestarter gro
 
 - Total active hjertestarter groups: `r n.hs.active`
 
-- Number of "near-misses" hjertestarter groups (10-14 routes): `r n.near.misses` (`r `% of total active groups)
+- Number of "near-misses" hjertestarter groups (10-14 routes): `r n.near.misses` (`r per.near.misses`% of total active groups)
 
 - Number of groups achieving 15 routes: `r hs[, sum(out_15ruter == 1)]` (`r round(hs[, sum(out_15ruter == 1)] / n.hs.active * 100, digits = 1)`% of total active groups)  
 
 - Distribution of number of routes achieved:  
 
-```{r, fig.height=2}
-gghistogram(hs[aktiv == "Ja"], x = "antal_ruter_med_hjerteid", fill = fill_col,  ylab = "Number of groups", xlab = "Number of routes achieved") + theme(text = element_text(size = plot_font_size))
+```{r fig1, fig.height=2}
+ymax_val <- max(hs[aktiv == "Ja", .N, by = antal_ruter_med_hjerteid]$N)
+ggplot() +
+  geom_histogram(
+    data = hs[aktiv == "Ja"],
+    mapping = aes(antal_ruter_med_hjerteid),
+    fill = fill_col,
+    color = "black",
+    size = line_size,
+    bins = 23
+  ) +
+  geom_rect(
+    mapping = aes(
+      xmin = 10,
+      xmax = 14.5,
+      ymin = 0,
+      ymax = ymax_val
+    ),
+    fill = "grey",
+    alpha = 0.5
+  ) +
+  annotate(
+    "text",
+    x = 12.3,
+    y = 160,
+    label = "near-miss zone",
+    color = "grey35",
+    size = 3.3
+  ) +
+  ylab("Number of groups") +
+  xlab("Number of routes achieved") +
+  theme_classic() +
+  theme(text = element_text(size = plot_font_size))
 ```
 
 
@@ -165,38 +203,76 @@ gghistogram(hs[aktiv == "Ja"], x = "antal_ruter_med_hjerteid", fill = fill_col, 
 - Distribution of ages (by gender):
 
 ```{r, fig.height=2.0}
-gghistogram(collectors, x = "age", fill = fill_col, size = line_size, facet.by = "gender") + theme(text = element_text(size = plot_font_size))
-
+ggplot() +
+  geom_histogram(
+    data = collectors,
+    mapping = aes(age),
+    fill = fill_col,
+    color = "black",
+    size = line_size
+  ) + facet_wrap(vars(gender)) +  ylab("Number of collectors") +
+  xlab("Age") +
+  theme_classic() +
+  theme(text = element_text(size = plot_font_size))
 ```
 
 
 - Distribution by registration date:  
 
 ```{r, fig.height=2}
-gghistogram(
-  collectors[indtastings_date < gl$d.day],
-  x = "indtastings_date",
-  fill = fill_col,
-  size = line_size,
-  bins = 100
-) + xlab("Registration date") + theme(text = element_text(size = plot_font_size))
-
+ggplot() +
+  geom_histogram(
+    data = collectors[indtastings_date < gl$d.day],
+    mapping = aes(indtastings_date),
+    fill = fill_col,
+    color = "black",
+    size = line_size,
+    bins = 100) +
+  ylab("Number of collectors") +
+  xlab("Registration date") +
+  theme_classic() +
+  theme(text = element_text(size = plot_font_size))
 ```
 
 
 ## Challenges
 ```{r, include=FALSE}
-collectors[, lag_time_min := as.numeric(lag_time / 60)]
-plot_lagtime_10 <- gghistogram(collectors[!is.na(lag_time_min) &
+
+plot_lagtime_10 <- 
+ggplot() +
+  geom_histogram(
+    data = collectors[!is.na(lag_time_min) &
                                             hjertestarterid > 1 &
-                                            lag_time_min < 10 , .(lag_time_min)], x = "lag_time_min",
-                               fill = fill_col, size = line_size) + labs(x = "Lag time (minutes)", y = "Count") + theme(text = element_text(size = plot_font_size))
+                                            lag_time_min < 10 , .(lag_time_min)],
+    mapping = aes(lag_time_min),
+    fill = fill_col,
+    color = "black",
+    size = line_size) +
+  ylab("Number of collectors") +
+  xlab("Lag time (minutes)") +
+  theme_classic() +
+  theme(text = element_text(size = plot_font_size))
+  
+  # 
+  # 
+  # gghistogram(, x = "",
+  #                              fill = fill_col, size = line_size) + labs(x = "Lag time (minutes)", y = "Count") + theme(text = element_text(size = plot_font_size))
 plot_lagtime_10plus <-
-  gghistogram(collectors[!is.na(lag_time_min) &
+  ggplot() +
+  geom_histogram(
+    data = collectors[!is.na(lag_time_min) &
                            hjertestarterid > 1 &
                            lag_time_min > 10 &
-                           lag_time_min < 1e5 , .(lag_time_min)], x = "lag_time_min",
-              fill = fill_col, size = line_size) + labs(x = "Lag time (minutes)", y = "Count")  + theme(text = element_text(size = plot_font_size))
+                           lag_time_min < 1e5 , .(lag_time_min)],
+    mapping = aes(lag_time_min),
+    fill = fill_col,
+    color = "black",
+    size = line_size) +
+  ylab("Number of collectors") +
+  xlab("Lag time (minutes)") +
+  theme_classic() +
+  theme(text = element_text(size = plot_font_size))
+
 
 plot_lag_time <-
   ggarrange(
@@ -216,11 +292,11 @@ n_below_10 <- NROW(below_10min)
 n_collectors <- NROW(collectors[hjertestarterid > 1])
 ```
 
-This sections explains the challenges that prevented us from addressing the original problem - predicting which groups would achieve between 10 - 14 routes.
+This sections explains the challenges that prevented us from addressing the original problem - predicting which groups should receive an intervention to improve the odds of "near-miss" groups achieving $\ge 15$ routes.
 
 ### Few "near-misses"
 
-Only `r per.near.misses`% of the total active groups ended up being "near-misses". As such, any model to predict these groups would have to perform very well in order to avoid giving too many false positives (i.e. predicting a group would be a near miss when it wasn't).
+The data suggests that LU2019 was already effective at getting groups to the goal of 15 routes. This can be seen in the figure in section 2.3.1, where the number of groups in the near-miss zone is small (`r per.near.misses`% of the total active groups), but the number of groups achieving the minimum goal of 15 is high. This shows that the number of groups who would be aided by any intervention is small, and thus the impact of any intervention to increase the number of groups reaching 15 would be minimal.
 
 ### Lag-time  
 
@@ -253,7 +329,7 @@ n.collectors.all <- NROW(collectors)
 ```
 
 
-Since LU needs time to implement any intervention, we have to establish a "cut-off" date. This is the date LU will start the intevention, and thus the date on which LU assess to see which groups are at risk of being "near-misses". Therefore our prediction model can only uses data from before this date.
+Since LU needs time to implement any intervention, we have to establish a "cut-off" date. This is the date LU will start the intervention, and thus the date on which LU assess to see which groups are at risk of being "near-misses". Therefore our prediction model can only uses data from before this date.
 
 A total of `r n.after.cut` (`r round(n.after.cut / n_collectors * 100, digits = 1)`%) collectors attached to a hjertestarter group signed up after the cut-off date we used for this analysis (`r format(gl$cut.day, "%d-%b")`). This is a significant amount of data that we are not able to use. Further, it is likely that the dynamics change in the final weeks, which may limit the utility of a model built on data that does not include these weeks.
 
@@ -279,7 +355,7 @@ We investigated `r length(forms_hs)` models. The model with the best trade-off o
 
 This model shows that the lag-time between successive collector signups does not have a linear relationship with the outcome. In other words, the relationship between the covariate (lag-time) and the outcome changes depending on the value of the lag-time. The model also shows that the earlier the group was created, the greater the number of routes the group achieved.  
 
-However, as the plots below show, there are clearly two clusters of hjertestarter groups when plotted against either explanitory variable (plot A: time to first 5 collectors, plot B: date of group registration). Thus the relationship between the explanitory variables and the number of routes as described by the model is likely not usable.  
+However, as the plots below show, there are clearly two clusters of hjertestarter groups when plotted against either explanatory variable (plot A: time to first 5 collectors, plot B: date of group registration). Thus the relationship between the explanatory variables and the number of routes as described by the model is likely not usable.  
 
 ```{r, fig.height = 2.8, fig.width=7}
 p1 <- ggscatter(
@@ -293,7 +369,9 @@ p1 <- ggscatter(
     ylab = "Number of routes",
     xlab = "Time to first 5 collectors registered (days)"
   ) +
-  geom_ribbon(data = hs[aktiv == "Ja"], aes(x = lag_5_in_days, ymin = 10, ymax = 14.5), alpha = 0.2) + theme(text = element_text(size = plot_font_size))
+  geom_ribbon(data = hs[aktiv == "Ja"], aes(x = lag_5_in_days, ymin = 10, ymax = 14.5), alpha = 0.2) +
+  annotate("text", x = 85, y = 11.5, label = "near-miss zone", color = "grey35") +
+  theme(text = element_text(size = plot_font_size))
 
 
 p2 <- ggscatter(
@@ -307,12 +385,12 @@ p2 <- ggscatter(
     ylab = "Number of routes",
     xlab = "Date of group registration"
   ) +
-  geom_ribbon(data = hs[aktiv == "Ja"], aes(x = oprettet_date, ymin = 10, ymax = 14.5), alpha = 0.2) + theme(text = element_text(size = plot_font_size))
+  geom_ribbon(data = hs[aktiv == "Ja"], aes(x = oprettet_date, ymin = 10, ymax = 14.5), alpha = 0.2) +
+  annotate("text", x = as.Date("2019-03-19"), y = 11.5, label = "near-miss zone", color = "grey35") +
+  theme(text = element_text(size = plot_font_size))
 
 cowplot::plot_grid(p1, p2, nrow = 1, labels = c("A", "B"))
 ```
-
-
 
 
 ## Sub-analysis: Predicting no-shows
@@ -345,9 +423,11 @@ This models shows that those collectors who are not connected to a hjertestarter
 
 ## Recommendations
 
-For the 2020 LU, we recommend aiming to reduce the number of no-shows. This could potentially be done with an intervention that increases the probability that a collector will join a hjertestarter group. the intervention could be applied on a rolling-basis to each newly recruited collector, or it could be applied at-once to all collectors that are registered (but not part of a hjertestarter group) on a specific date.The nature of this implementation is, however, beyond the scope of this analysis.
+### No-shows  
 
-Additionally, it may be helpful to collect additional variables from the collectors that may help explain no-shows ahead of time. These could include:
+For the 2020 LU, we recommend aiming to reduce the number of no-shows. This could potentially be done with an intervention to increase the probability that a collector will join a hjertestarter group. The intervention could be applied on a rolling-basis to each newly recruited collector, or it could be applied at-once to all collectors that are registered (but not part of a hjertestarter group) on a specific date. The nature of this intervention is, however, beyond the scope of this analysis.
+
+Additionally, it may be helpful to collect additional variables from the collectors that may be useful in predicting no-shows ahead of time. These could include:
 
 - Previous experience as a collector (yes/no)
 
@@ -358,14 +438,15 @@ Additionally, it may be helpful to collect additional variables from the collect
 These data would only be worthwhile to collect if there is a reasonable probability that a high percentage of people will provide the data. Otherwise the data will end up too biased to be useful.
 
 
-Additionally, it would be relatively easy to assess the effectiveness of any intervention. If the intervention is applied to a randomly-selected sub-set of the collectors, then one can test if the intervention was associated with the no-show rate. This test can be done through a logistic regression fit to the dataset of collectors. The outcome variable would be the show/no-show status, and the explainitory variables would be the intervention group each collector belonged to.
+Furthermore, it would be relatively easy to assess the effectiveness of any intervention. If the intervention is applied to a randomly-selected sub-set of the collectors, then one can test if the intervention was associated with the probability of a collector joing a hjertestarter group and/or the probability of being a no-show. This test can be done through a logistic regression fit to the dataset of collectors. The outcome variable would be the either hjertestarter group status or show/no-show status, and the explanatory variable would be the intervention group each collector belonged to.
 
+### Hjertestarter groups $\ge 15$ routes
 
-testing to see if the planned intervention is effective at improving the likelihood that a group will achieve 15 routes (or if the intervention increases the number of routes a group achieves on average). This can be done in the following steps in 2020:
+If strongly desired, it would be possible to set up a test to see if the original planned intervention is effective at improving the likelihood that a group will achieve 15 routes (or if the intervention increases the number of routes a group achieves on average). However, given the small number of groups that were "near-misses", it will likely be difficult to see any effects from an intervention.  The following describes the process to set up such a test for LU 2020.
 
 1. Select a date when the intervention should start (e.g. 3 weeks before collection day).
 
-2. On that date, randomly divide the existing active hjertestarter groups into two  - the intervention group and the control group - and ensure that the data on which group each hjertestarter group belongs to is tracked and stored. The size of the intervention group will be determined by a combination of how many resource for the intevention are available, and how many resource each individual group requires for the intervention.
+2. On that date, randomly divide the existing active hjertestarter groups into two  - the intervention group and the control group - and ensure that the data on which group each hjertestarter group belongs to is tracked and stored. The size of the intervention group will be determined by a combination of how many resource for the intervention are available, and how many resource each individual group requires for the intervention.
 
 3. Apply the intervention to the those in the intervention group, and apply the standard practices to those in the control group.
 
